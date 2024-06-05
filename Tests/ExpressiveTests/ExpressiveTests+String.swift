@@ -38,4 +38,25 @@ extension ExpressiveTests {
             String("-16 + VIG + (3^2 + VIG)⋅(NEX - 5) ∕ 5")
         )
     }
+
+    func test_print_options() throws {
+        let x: Expression = "  -16 + VIG + (3  ^2 + VIG) * (NEX - 5) / 5"
+        XCTAssertEqual(
+            x.description(options: .init(allParens: true, radicalParens: "[", implicitMultiplication: false, multiplicationSign: "*")),
+            String("((-16) + VIG) + ((((3^2) + VIG)*(NEX - 5)) ∕ 5)")
+        )
+    }
+
+    func test_var_transform() throws {
+        let x: Expression = "  -16 + VIG + (3  ^2 + VIG) * (NEX - 5) / 5"
+        XCTAssertEqual(
+            x.description(varTransform: {
+                switch $0 {
+                case "NEX": "xp"
+                default: $0
+                }
+            }),
+            String("-16 + VIG + (3^2 + VIG)⋅(xp - 5) ∕ 5")
+        )
+    }
 }

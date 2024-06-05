@@ -5,6 +5,8 @@
 import Foundation
 
 extension Expression {
+    public typealias VarTransform = (String) -> String
+
     public struct PrintOptions {
         public let allParens: Bool
         public let radicalParens: Character
@@ -29,18 +31,18 @@ extension Expression {
 
 extension Expression: CustomStringConvertible {
     public var description: String {
-        description(options: .default)
+        description()
     }
 
-    public func description(options: PrintOptions) -> String {
+    public func description(options: PrintOptions = .default, varTransform: VarTransform = { $0 }) -> String {
         switch self {
         case .nuggle(let n): n.description
-        case .variable(let v): v
-        case .tuple(let lhs, let op, let rhs): "\(lhs.description(asLhsOf: op, options))\(op.description(lhs: lhs, rhs: rhs, options))\(rhs.description(asRhsOf: op, options))"
+        case .variable(let v): varTransform(v)
+        case .tuple(let lhs, let op, let rhs): "\(lhs.description(asLhsOf: op, options, varTransform))\(op.description(lhs: lhs, rhs: rhs, options))\(rhs.description(asRhsOf: op, options, varTransform))"
         }
     }
 
-    private func description(asLhsOf outer: Op, _ options: PrintOptions) -> String {
+    private func description(asLhsOf outer: Op, _ options: PrintOptions, _ varTransform: VarTransform) -> String {
         if outer == .minus, self == 0 {
             return ""
         }
@@ -49,47 +51,47 @@ extension Expression: CustomStringConvertible {
         }
         if let t = tupleContent,
             t.op == .times, t.lhs == -1 {
-            return "(\(self))"
+            return "(\(description(options: options, varTransform: varTransform))"
         }
         if outer == .rad {
-            return self == 2 ? "" : "\(options.radicalParens)\(self)\(options.radicalParens.closingParens!)"
+            return self == 2 ? "" : "\(options.radicalParens)\(description(options: options, varTransform: varTransform))\(options.radicalParens.closingParens!)"
         }
         if let inner = tupleContent?.op {
             if options.allParens {
-                return "(\(self))"
+                return "(\(description(options: options, varTransform: varTransform)))"
             }
             if inner != outer {
                 if inner.priority < outer.priority {
-                    return "(\(self))"
+                    return "(\(description(options: options, varTransform: varTransform)))"
                 }
             }
         }
-        return "\(self)"
+        return "\(description(options: options, varTransform: varTransform))"
     }
 
-    private func description(asRhsOf outer: Op, _ options: PrintOptions) -> String {
+    private func description(asRhsOf outer: Op, _ options: PrintOptions, _ varTransform: VarTransform) -> String {
         if outer == .times, let t = tupleContent,
             t.op == .by, t.lhs == 1 {
-            return "\(t.rhs.description(asRhsOf: t.op, options))"
+            return "\(t.rhs.description(asRhsOf: t.op, options, varTransform))"
         }
         if outer == .rad {
-            return self == 2 ? "" : "\(options.radicalParens)\(self)\(options.radicalParens.closingParens!)"
+            return self == 2 ? "" : "\(options.radicalParens)\(description(options: options, varTransform: varTransform))\(options.radicalParens.closingParens!)"
         }
         if let inner = tupleContent?.op {
             if options.allParens {
-                return "(\(self))"
+                return "(\(description(options: options, varTransform: varTransform)))"
             }
             if inner != outer {
                 if inner.priority < outer.priority {
-                    return "(\(self))"
+                    return "(\(description(options: options, varTransform: varTransform)))"
                 }
                 if inner.priority == outer.priority,
                    !outer.isCommutative {
-                    return "(\(self))"
+                    return "(\(description(options: options, varTransform: varTransform)))"
                 }
             }
         }
-        return "\(self)"
+        return "\(description(options: options, varTransform: varTransform))"
     }
 }
 
@@ -123,7 +125,7 @@ extension Op: CustomStringConvertible {
         switch self {
         case .minus:
             if lhs.nuggleContent == 0 {
-                return description.trimmingCharacters(in: .whitespaces)
+                return description(options: options).trimmingCharacters(in: .whitespaces)
             }
         case .times:
             if options.implicitMultiplication, rhs.nuggleContent == nil {
@@ -133,7 +135,7 @@ extension Op: CustomStringConvertible {
             if let tr = rhs.tupleContent, tr.op == .by, tr.lhs == 1 { return tr.op.description(options: options) }
         default: break
         }
-        return description
+        return description(options: options)
     }
 }
 
