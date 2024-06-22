@@ -146,13 +146,29 @@ extension Op {
     }
 }
 
-extension Expression {
-    public static func joining(_ op: Op, _ terms: [Expression]) -> Expression? {
-        if terms.count <= 1 { return terms.first }
+extension Sequence<Expression> {
+    public func joined(_ op: Op = .plus) -> Expression? {
         if op.isRightAssociative {
-            return .tuple(terms.first!, op, joining(op, Array(terms.dropFirst()))!)
+            guard let first = first(where: { _ in true }) else { return nil }
+            if let rest = dropFirst().joined(op) {
+                return .tuple(first, op, rest)
+            } else {
+                return first
+            }
         } else {
-            return .tuple(joining(op, Array(terms.dropLast()))!, op, terms.last!)
+            return Array(self).joined(op)
+        }
+    }
+}
+
+extension Array<Expression> {
+    public func joined(_ op: Op = .plus) -> Expression? {
+        guard let first else { return nil }
+        guard count > 1 else { return first }
+        if op.isRightAssociative {
+            return .tuple(first, op, dropFirst().joined(op)!)
+        } else {
+            return .tuple(dropLast().joined(op)!, op, last!)
         }
     }
 }
