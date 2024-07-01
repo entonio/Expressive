@@ -5,7 +5,7 @@
 import Foundation
 import Nuggle
 
-public enum Op: Codable, CaseIterable {
+public enum Op: Codable, CaseIterable, Sendable {
     case plus
     case minus
     case times

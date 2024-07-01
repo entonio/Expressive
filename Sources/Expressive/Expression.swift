@@ -7,7 +7,7 @@
 import Foundation
 import Nuggle
 
-public indirect enum Expression: Codable {
+public indirect enum Expression: Codable, Sendable {
     case nuggle(_ content: Nuggle)
     case variable(_ content: String)
     case tuple(_ lhs: Expression, _ op: Op, _ rhs: Expression)
