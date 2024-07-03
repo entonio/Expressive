@@ -30,7 +30,7 @@ extension Character {
     }
 }
 
-class IllegalArgumentError: Error {
+struct IllegalArgumentError: Error {
     let message: String
 
     init(_ message: String) {

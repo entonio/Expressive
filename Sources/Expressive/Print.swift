@@ -7,7 +7,7 @@ import Foundation
 extension Expression {
     public typealias VarTransform = (String) -> String
 
-    public struct PrintOptions {
+    public struct PrintOptions: Sendable {
         public let allParens: Bool
         public let radicalParens: Character
         public let implicitMultiplication: Bool
